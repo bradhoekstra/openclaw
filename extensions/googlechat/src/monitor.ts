@@ -16,9 +16,9 @@ import {
 } from "./monitor-routing.js";
 import type {
   GoogleChatCoreRuntime,
+  GoogleChatEventContext,
   GoogleChatMonitorOptions,
   GoogleChatRuntimeEnv,
-  WebhookTarget,
 } from "./monitor-types.js";
 import { warnAppPrincipalMisconfiguration } from "./monitor-webhook.js";
 import { getGoogleChatRuntime } from "./runtime.js";
@@ -47,7 +47,7 @@ function normalizeAudienceType(value?: string | null): GoogleChatAudienceType | 
   return undefined;
 }
 
-async function processGoogleChatEvent(event: GoogleChatEvent, target: WebhookTarget) {
+async function processGoogleChatEvent(event: GoogleChatEvent, target: GoogleChatEventContext) {
   const eventType = event.type ?? (event as { eventType?: string }).eventType;
   if (eventType !== "MESSAGE") {
     return;
@@ -371,6 +371,45 @@ async function downloadAttachment(
 
 function monitorGoogleChatProvider(options: GoogleChatMonitorOptions): () => void {
   const core = getGoogleChatRuntime();
+  const mediaMaxMb = options.account.config.mediaMaxMb ?? 20;
+
+  // Pub/Sub mode: pull from a GCP Pub/Sub subscription instead of registering a webhook.
+  const pubsubSubscription =
+    options.pubsubSubscription ?? options.account.config.pubsubSubscription;
+  if (pubsubSubscription) {
+    let cleanupFn: (() => void) | undefined;
+    void import("./monitor-pubsub.js")
+      .then(({ startPubSubMonitor }) =>
+        startPubSubMonitor({
+          subscriptionName: pubsubSubscription,
+          maxMessages: options.pubsubMaxMessages ?? options.account.config.pubsubMaxMessages,
+          context: {
+            account: options.account,
+            config: options.config,
+            runtime: options.runtime,
+            core,
+            statusSink: options.statusSink,
+            mediaMaxMb,
+          },
+          runtime: options.runtime,
+          abortSignal: options.abortSignal,
+          processEvent: processGoogleChatEvent,
+        }),
+      )
+      .then((cleanup) => {
+        cleanupFn = cleanup;
+      })
+      .catch((err) => {
+        options.runtime.error?.(
+          `[${options.account.accountId}] Pub/Sub monitor failed to start: ${String(err)}`,
+        );
+      });
+    return () => {
+      cleanupFn?.();
+    };
+  }
+
+  // Webhook mode (default).
   const webhookPath = resolveWebhookPath({
     webhookPath: options.webhookPath,
     webhookUrl: options.webhookUrl,
@@ -383,7 +422,6 @@ function monitorGoogleChatProvider(options: GoogleChatMonitorOptions): () => voi
 
   const audienceType = normalizeAudienceType(options.account.config.audienceType);
   const audience = options.account.config.audience?.trim();
-  const mediaMaxMb = options.account.config.mediaMaxMb ?? 20;
 
   warnAppPrincipalMisconfiguration({
     accountId: options.account.accountId,

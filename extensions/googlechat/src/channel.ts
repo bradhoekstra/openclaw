@@ -83,6 +83,9 @@ const googleChatConfigAdapter = createScopedChannelConfigAdapter<
     "audience",
     "webhookPath",
     "webhookUrl",
+    "useApplicationDefaultCredentials",
+    "pubsubSubscription",
+    "pubsubMaxMessages",
     "botUser",
     "name",
   ],
@@ -197,6 +200,10 @@ export const googlechatPlugin = createChatChannelPlugin({
           if (!enabled || !configured) {
             return [];
           }
+          // Pub/Sub mode uses IAM auth, not JWT audience verification.
+          if (entry.pubsubSubscription) {
+            return [];
+          }
           const issues: ChannelStatusIssue[] = [];
           if (!entry.audience) {
             issues.push({
@@ -225,6 +232,7 @@ export const googlechatPlugin = createChatChannelPlugin({
           audience: snapshot.audience ?? null,
           webhookPath: snapshot.webhookPath ?? null,
           webhookUrl: snapshot.webhookUrl ?? null,
+          pubsubSubscription: snapshot.pubsubSubscription ?? null,
         }),
       probeAccount: async ({ account }) =>
         (await loadGoogleChatChannelRuntime()).probeGoogleChat(account),
@@ -239,6 +247,7 @@ export const googlechatPlugin = createChatChannelPlugin({
           audience: account.config.audience,
           webhookPath: account.config.webhookPath,
           webhookUrl: account.config.webhookUrl,
+          pubsubSubscription: account.config.pubsubSubscription,
           dmPolicy: account.config.dm?.policy ?? "pairing",
         },
       }),
