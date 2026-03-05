@@ -41,6 +41,7 @@ import { startGoogleChatGatewayAccount } from "./gateway.js";
 import { collectRuntimeConfigAssignments, secretTargetRegistryEntries } from "./secret-contract.js";
 import { googlechatSetupAdapter } from "./setup-core.js";
 import { googlechatSetupWizard } from "./setup-surface.js";
+import { probeGoogleChat, startGoogleChatMonitor, resolveGoogleChatWebhookPath } from "./monitor.js";
 
 const loadGoogleChatChannelRuntime = createLazyRuntimeNamedExport(
   () => import("./channel.runtime.js"),
@@ -221,8 +222,7 @@ export const googlechatPlugin = createChatChannelPlugin({
           webhookUrl: snapshot.webhookUrl ?? null,
           pubsubSubscription: snapshot.pubsubSubscription ?? null,
         }),
-      probeAccount: async ({ account }) =>
-        (await loadGoogleChatChannelRuntime()).probeGoogleChat(account),
+      probeAccount: async ({ account }) => probeGoogleChat(account),
       resolveAccountSnapshot: ({ account }) => ({
         accountId: account.accountId,
         name: account.name,
@@ -240,7 +240,49 @@ export const googlechatPlugin = createChatChannelPlugin({
       }),
     }),
     gateway: {
-      startAccount: startGoogleChatGatewayAccount,
+      startAccount: async (ctx) => {
+        const account = ctx.account;
+        const isPubSub = Boolean(account.config.pubsubSubscription);
+        const modeLabel = isPubSub ? "Pub/Sub" : "webhook";
+        ctx.log?.info(
+          `[${account.accountId}] starting Google Chat ${modeLabel} (credentials: ${account.credentialSource})`,
+        );
+        ctx.setStatus({
+          accountId: account.accountId,
+          running: true,
+          lastStartAt: Date.now(),
+          ...(isPubSub
+            ? { pubsubSubscription: account.config.pubsubSubscription }
+            : { webhookPath: resolveGoogleChatWebhookPath({ account }) }),
+          audienceType: account.config.audienceType,
+          audience: account.config.audience,
+        });
+        const unregister = await startGoogleChatMonitor({
+          account,
+          config: ctx.cfg,
+          runtime: ctx.runtime,
+          abortSignal: ctx.abortSignal,
+          webhookPath: account.config.webhookPath,
+          webhookUrl: account.config.webhookUrl,
+          pubsubSubscription: account.config.pubsubSubscription,
+          pubsubMaxMessages: account.config.pubsubMaxMessages,
+          statusSink: (patch) => ctx.setStatus({ accountId: account.accountId, ...patch }),
+        });
+        // Keep the promise pending until abort (webhook mode is passive).
+        await new Promise<void>((resolve) => {
+          if (ctx.abortSignal.aborted) {
+            resolve();
+            return;
+          }
+          ctx.abortSignal.addEventListener("abort", () => resolve(), { once: true });
+        });
+        unregister?.();
+        ctx.setStatus({
+          accountId: account.accountId,
+          running: false,
+          lastStopAt: Date.now(),
+        });
+      },
     },
   },
   pairing: {
