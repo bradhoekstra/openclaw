@@ -53,7 +53,7 @@ const meta = {
   selectionLabel: "Google Chat (Chat API)",
   docsPath: "/channels/googlechat",
   docsLabel: "googlechat",
-  blurb: "Google Workspace Chat app with HTTP webhook.",
+  blurb: "Google Workspace Chat app via HTTP webhooks or Pub/Sub.",
   aliases: ["gchat", "google-chat"],
   order: 55,
   detailLabel: "Google Chat",
@@ -73,6 +73,9 @@ const googleChatConfigAdapter = createScopedChannelConfigAdapter<ResolvedGoogleC
     "audience",
     "webhookPath",
     "webhookUrl",
+    "useApplicationDefaultCredentials",
+    "pubsubSubscription",
+    "pubsubMaxMessages",
     "botUser",
     "name",
   ],
@@ -184,6 +187,10 @@ export const googlechatPlugin = createChatChannelPlugin({
           if (!enabled || !configured) {
             return [];
           }
+          const isPubSub = Boolean(entry.pubsubSubscription);
+          if (isPubSub) {
+            return [];
+          }
           const issues: ChannelStatusIssue[] = [];
           if (!entry.audience) {
             issues.push({
@@ -212,6 +219,7 @@ export const googlechatPlugin = createChatChannelPlugin({
           audience: snapshot.audience ?? null,
           webhookPath: snapshot.webhookPath ?? null,
           webhookUrl: snapshot.webhookUrl ?? null,
+          pubsubSubscription: snapshot.pubsubSubscription ?? null,
         }),
       probeAccount: async ({ account }) =>
         (await loadGoogleChatChannelRuntime()).probeGoogleChat(account),
@@ -226,6 +234,7 @@ export const googlechatPlugin = createChatChannelPlugin({
           audience: account.config.audience,
           webhookPath: account.config.webhookPath,
           webhookUrl: account.config.webhookUrl,
+          pubsubSubscription: account.config.pubsubSubscription,
           dmPolicy: account.config.dm?.policy ?? "pairing",
         },
       }),
