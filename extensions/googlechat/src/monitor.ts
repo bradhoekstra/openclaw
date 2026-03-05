@@ -217,8 +217,9 @@ async function processMessageWithPipeline(params: {
     reply: {
       to: `googlechat:${spaceId}`,
       originatingTo: `googlechat:${spaceId}`,
-      replyToId: message.thread?.name,
-      replyToIdFull: message.thread?.name,
+      messageThreadId: account.config.replyToMode === "off" ? undefined : message.thread?.name,
+      replyToId: account.config.replyToMode === "off" ? undefined : message.thread?.name,
+      replyToIdFull: account.config.replyToMode === "off" ? undefined : message.thread?.name,
     },
     message: {
       body,
@@ -273,7 +274,7 @@ async function processMessageWithPipeline(params: {
         account,
         space: spaceId,
         text: `_${botName} is typing..._`,
-        thread: message.thread?.name,
+        thread: account.config.replyToMode === "off" ? undefined : message.thread?.name,
       });
       typingMessageName = result?.messageName;
     } catch (err) {

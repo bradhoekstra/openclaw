@@ -239,6 +239,22 @@ describe("sendGoogleChatMessage", () => {
     });
   });
 
+  it("converts message resource names to Google Chat thread resource names", async () => {
+    const fetchMock = stubSuccessfulSend("spaces/AAA/messages/123");
+
+    await sendGoogleChatMessage({
+      account,
+      space: "spaces/AAA",
+      text: "hello",
+      thread: "spaces/AAA/messages/abc.def",
+    });
+
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      thread: { name: "spaces/AAA/threads/abc" },
+    });
+  });
+
   it("does not set messageReplyOption for non-thread sends", async () => {
     const fetchMock = stubSuccessfulSend("spaces/AAA/messages/124");
 

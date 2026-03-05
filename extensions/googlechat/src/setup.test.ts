@@ -557,4 +557,28 @@ describe("resolveGoogleChatAccount", () => {
     expect(resolved.credentialSource).toBe("file");
     expect(resolved.credentialsFile).toBe("/tmp/alerts-sa.json");
   });
+
+  it("uses ADC when explicitly configured or GOOGLE_APPLICATION_CREDENTIALS is set", () => {
+    const configured = resolveGoogleChatAccount({
+      cfg: {
+        channels: {
+          googlechat: {
+            useApplicationDefaultCredentials: true,
+          },
+        },
+      },
+      accountId: "default",
+    });
+    expect(configured.credentialSource).toBe("adc");
+    expect(configured.credentials).toBeUndefined();
+    expect(configured.credentialsFile).toBeUndefined();
+
+    vi.stubEnv("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/google-application-credentials.json");
+    const fromEnv = resolveGoogleChatAccount({
+      cfg: { channels: { googlechat: {} } },
+      accountId: "work",
+    });
+    expect(fromEnv.credentialSource).toBe("adc");
+    expect(fromEnv.credentialsFile).toBe("/tmp/google-application-credentials.json");
+  });
 });

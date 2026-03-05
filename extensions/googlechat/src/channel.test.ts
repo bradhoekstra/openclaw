@@ -313,6 +313,10 @@ describe("googlechatPlugin outbound sendMedia", () => {
 });
 
 describe("googlechatPlugin threading", () => {
+  it("strips explicit reply tags when replyToMode is off", () => {
+    expect(googlechatThreadingAdapter.allowExplicitReplyTagsWhenOff).toBe(false);
+  });
+
   it("honors per-account replyToMode overrides", () => {
     const cfg = {
       channels: {

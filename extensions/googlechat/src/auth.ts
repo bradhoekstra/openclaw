@@ -106,6 +106,7 @@ export async function getGoogleChatAccessToken(
   } catch (err) {
     throw new Error(
       `Failed to initialize Google Chat auth client (credentialSource=${account.credentialSource}): ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
   let access;
@@ -114,6 +115,7 @@ export async function getGoogleChatAccessToken(
   } catch (err) {
     throw new Error(
       `Could not refresh Google Chat access token (credentialSource=${account.credentialSource}): ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
   const token = typeof access === "string" ? access : access?.token;

@@ -28,4 +28,14 @@ describe("googlechat config schema", () => {
 
     expect(result.success).toBe(true);
   });
+
+  it("accepts Pub/Sub and ADC config fields", () => {
+    const result = GoogleChatConfigSchema.safeParse({
+      useApplicationDefaultCredentials: true,
+      pubsubSubscription: "projects/my-project/subscriptions/chat-events",
+      pubsubMaxMessages: 5,
+    });
+
+    expect(result.success).toBe(true);
+  });
 });

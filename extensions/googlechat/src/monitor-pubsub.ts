@@ -81,10 +81,14 @@ export function startPubSubMonitor(params: PubSubMonitorParams): () => void {
         message.ack();
         return;
       }
-      const eventType = (raw as Record<string, unknown>).type ?? "unknown";
-      const spaceName =
-        ((raw as Record<string, unknown>).space as Record<string, unknown> | undefined)?.name ??
-        "unknown";
+      const eventType =
+        typeof (raw as Record<string, unknown>).type === "string"
+          ? (raw as Record<string, string>).type
+          : "unknown";
+      const rawSpaceName = (
+        (raw as Record<string, unknown>).space as Record<string, unknown> | undefined
+      )?.name;
+      const spaceName = typeof rawSpaceName === "string" ? rawSpaceName : "unknown";
       logVerbose(
         core,
         runtime,

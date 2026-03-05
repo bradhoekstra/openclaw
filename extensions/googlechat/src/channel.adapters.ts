@@ -102,6 +102,7 @@ export const googlechatSecurityAdapter = {
 };
 
 export const googlechatThreadingAdapter = {
+  allowExplicitReplyTagsWhenOff: false,
   scopedAccountReplyToMode: {
     resolveAccount: (cfg: OpenClawConfig, accountId?: string | null) =>
       resolveGoogleChatAccount({ cfg, accountId }),
