@@ -91,14 +91,18 @@ export async function deliverGoogleChatReply(params: {
         firstTextChunk = false;
         statusSink?.({ lastOutboundAt: Date.now() });
       } catch (err) {
-        runtime.error?.(`Google Chat message send failed: ${String(err)}`);
+        runtime.error?.(
+          `Google Chat message send failed (credentialSource=${account.credentialSource}): ${String(err)}`,
+        );
         if (firstTextChunk && typingMessageName) {
           typingMessageName = undefined;
           try {
             await sendTextMessage(chunk);
             statusSink?.({ lastOutboundAt: Date.now() });
           } catch (fallbackErr) {
-            runtime.error?.(`Google Chat message fallback send failed: ${String(fallbackErr)}`);
+            runtime.error?.(
+              `Google Chat message fallback send failed (credentialSource=${account.credentialSource}): ${String(fallbackErr)}`,
+            );
           } finally {
             firstTextChunk = false;
           }
