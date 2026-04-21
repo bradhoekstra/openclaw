@@ -838,6 +838,9 @@ export const GoogleChatAccountSchema = z
     healthMonitor: ChannelHealthMonitorSchema,
     typingIndicator: z.enum(["none", "message", "reaction"]).optional(),
     responsePrefix: z.string().optional(),
+    useApplicationDefaultCredentials: z.boolean().optional(),
+    pubsubSubscription: z.string().optional(),
+    pubsubMaxMessages: z.number().int().positive().optional(),
   })
   .strict();
 
