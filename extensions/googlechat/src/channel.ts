@@ -41,7 +41,8 @@ import { startGoogleChatGatewayAccount } from "./gateway.js";
 import { collectRuntimeConfigAssignments, secretTargetRegistryEntries } from "./secret-contract.js";
 import { googlechatSetupAdapter } from "./setup-core.js";
 import { googlechatSetupWizard } from "./setup-surface.js";
-import { probeGoogleChat, startGoogleChatMonitor, resolveGoogleChatWebhookPath } from "./monitor.js";
+import { probeGoogleChat } from "./api.js";
+import { startGoogleChatMonitor, resolveGoogleChatWebhookPath } from "./monitor.js";
 
 const loadGoogleChatChannelRuntime = createLazyRuntimeNamedExport(
   () => import("./channel.runtime.js"),

@@ -16,7 +16,7 @@ export function setGoogleChatWebhookEventProcessor(processEvent: ProcessGoogleCh
   processGoogleChatEvent = processEvent;
 }
 
-const googleChatWebhookRequestHandler = createGoogleChatWebhookRequestHandler({
+export const googleChatWebhookRequestHandler = createGoogleChatWebhookRequestHandler({
   webhookTargets,
   webhookInFlightLimiter,
   processEvent: async (event, target) => {
