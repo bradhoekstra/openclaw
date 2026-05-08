@@ -176,6 +176,37 @@ describe("validateConfigObjectWithPlugins channel metadata (applyDefaults: true)
       );
     }
   });
+
+  it("accepts Google Chat Pub/Sub config from bundled channel metadata", async () => {
+    const result = validateConfigObjectWithPlugins(
+      {
+        channels: {
+          googlechat: {
+            useApplicationDefaultCredentials: true,
+            pubsubSubscription: "projects/my-project/subscriptions/chat-events",
+            pubsubMaxMessages: 5,
+            accounts: {
+              work: {
+                useApplicationDefaultCredentials: true,
+                pubsubSubscription: "projects/my-project/subscriptions/work-chat-events",
+                pubsubMaxMessages: 10,
+              },
+            },
+          },
+        },
+      },
+      {
+        pluginMetadataSnapshot: {
+          manifestRegistry: {
+            diagnostics: [],
+            plugins: [],
+          },
+        },
+      },
+    );
+
+    expect(result.ok).toBe(true);
+  });
 });
 
 describe("validateConfigObjectRawWithPlugins channel metadata", () => {

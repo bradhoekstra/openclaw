@@ -5083,7 +5083,7 @@ export const GENERATED_BUNDLED_CHANNEL_CONFIG_METADATA = [
     pluginId: "googlechat",
     channelId: "googlechat",
     label: "Google Chat",
-    description: "Google Workspace Chat app with HTTP webhook.",
+    description: "Google Workspace Chat app via HTTP webhooks or Pub/Sub.",
     schema: {
       $schema: "http://json-schema.org/draft-07/schema#",
       type: "object",
@@ -5457,6 +5457,17 @@ export const GENERATED_BUNDLED_CHANNEL_CONFIG_METADATA = [
         },
         responsePrefix: {
           type: "string",
+        },
+        useApplicationDefaultCredentials: {
+          type: "boolean",
+        },
+        pubsubSubscription: {
+          type: "string",
+        },
+        pubsubMaxMessages: {
+          type: "integer",
+          exclusiveMinimum: 0,
+          maximum: 9007199254740991,
         },
         accounts: {
           type: "object",
@@ -5835,6 +5846,17 @@ export const GENERATED_BUNDLED_CHANNEL_CONFIG_METADATA = [
               },
               responsePrefix: {
                 type: "string",
+              },
+              useApplicationDefaultCredentials: {
+                type: "boolean",
+              },
+              pubsubSubscription: {
+                type: "string",
+              },
+              pubsubMaxMessages: {
+                type: "integer",
+                exclusiveMinimum: 0,
+                maximum: 9007199254740991,
               },
             },
             required: ["groupPolicy"],
